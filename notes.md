@@ -1,0 +1,22 @@
+# Notes
+
+- **Code order:** locations → visibility → responses → priors → posterior → trials → search → late reports. Numbered sections in `simulate.py`.
+- **Notation:** $k$ = candidate location; $g$ = eye position; $e$ = distance between their coordinates. $c$ = true contrast; $u$ = cue. Code indices 0–18; center = 0.
+- **Visibility:** weak $d'_w(e)=3\times4.68/(e+4.68)$; strong $d'_s=2d'_w$. At $e=0$: 3 and 6. At $e=4.68$: 1.5 and 3. Peak, ratio and layout illustrative.
+- **One look:** all 19 responses. No target at $k$: $R_k\sim N(0,1)$. Target at $k$: $R_k\sim N(d'_c(k,g),1)$. Simulator knows truth; observer sees responses. This run: all targets absent.
+- **Prior (`prior`):** absence $1/2$; target at each location $1/38$. Either splits that into $1/76$ weak and $1/76$ strong. Known contrast: $1/38$ for that contrast, zero for the other.
+- **Late label:** reinterprets retained responses; no new look. Weak-label likelihood: 1 for weak, 0 for strong, $1/2$ for absent. Balanced labels preserve prior absence $1/2$.
+- **One-response example:** $R_k=3$. Weak $d'=3$: likelihood ratio $\exp(4.5)\approx90$. Strong $d'=6$: ratio 1. Same response, different evidence.
+- **Gaussian ratio:** $\log\Lambda=-(R-d')^2/2+R^2/2=d'R-d'^2/2$. Known-contrast posterior odds, one location versus absence: $\Lambda/19$. Odds are not probabilities.
+- **Independent looks (`search`):** $d_t=d'_w(k,g_t)$; $P_k=\sum_t d_t^2$, $W_k=\sum_t d_tR_{k,t}$. Updates: `P += d**2`, `W += d*R`. $P$ means accumulated precision, not probability. Fresh noise independent given past responses and chosen gaze.
+- **Posterior (`posterior`):** $m=1$ weak, $m=2$ strong; $\log\Lambda_{k,c}=mW_k-\tfrac12m^2P_k$. Prior × likelihood ratio, then normalize over 39 hypotheses. Either mixes likelihoods, not contrast values.
+- **Gaze (`choose_map`):** sum weak + strong posterior at each location; choose largest. First look central; stays allowed. No lookahead or stopping threshold. Budgets 2/4/8/20 are imposed; looks ≠ saccades or seconds.
+- **Report (`decode`):** “If present, where?” Highest-posterior location. Known contrast: maximize $mW_k-\tfrac12m^2P_k$, equivalently $W_k-\tfrac12mP_k$.
+- **Why Strong shifts:** larger penalty for high $P_k$. Deduction: Strong winner's $P$ cannot exceed Weak winner's $P$. Distance is only a proxy; positive mean distance shift is computed, not guaranteed on every trial.
+- **Measure:** selected location's distance to nearest gaze in the whole completed history. Within-trial Strong − Weak differences. SE = their sample SD / $\sqrt{2000}$.
+- **Limits:** mean P(present | Strong) = $5.6\times10^{-6}$ at 8 looks, $2.4\times10^{-18}$ at 20. Highly hypothetical reports. No human effect-size estimate; strategic guessing remains possible.
+- **Implementation:** `np.argmax` breaks ties by lowest index. No near ties in the 38,000 audited gaze choices. Plain probabilities matched the earlier log calculation for this run; changed parameters need rechecking.
+- **Outputs:** `summary.csv`: four budgets; `raw.npz`: paths, $P$, $W$, choices, distances; `figure.png`: mean difference ± paired Monte Carlo SE.
+- **P1:** advance information and scanning; Early Strong vs Weak on absent trials.
+- **P2:** detection and fixated/unfixated misses; Early Weak vs Either on matched weak-target trials. False alarms assessed separately.
+- **P3:** postsearch information and reports; Late vs Neutral, plus Early vs Late with matched trial type and final label. Code covers only the late Strong vs Weak spatial comparison on absent trials.
