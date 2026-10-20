@@ -1,3 +1,5 @@
+#Late contrast label and the conditional location report; see README.md"
+
 import csv
 from pathlib import Path
 
